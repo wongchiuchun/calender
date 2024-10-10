@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import moment from 'moment'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
-import { usePDF } from 'react-to-pdf'
-import { Palmtree, Download, Upload, Plus } from 'lucide-react'
+import { Palmtree, Upload, Plus } from 'lucide-react'
 import Papa from 'papaparse'
 
 const localizer = momentLocalizer(moment)
@@ -21,23 +20,6 @@ export default function HolidayCalendar() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [currentDate, setCurrentDate] = useState(new Date())
-
-  const { toPDF, targetRef } = usePDF({filename: 'holiday-calendar.pdf'})
-
-  useEffect(() => {
-    const storedEvents = localStorage.getItem('holidayCalendarEvents')
-    if (storedEvents) {
-      setEvents(JSON.parse(storedEvents).map((event: Event) => ({
-        ...event,
-        start: new Date(event.start),
-        end: new Date(event.end)
-      })))
-    }
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem('holidayCalendarEvents', JSON.stringify(events))
-  }, [events])
 
   const handleAddEvent = (e: React.FormEvent) => {
     e.preventDefault()
@@ -106,6 +88,21 @@ export default function HolidayCalendar() {
     }
   }, [currentDate])
 
+  useEffect(() => {
+    const storedEvents = localStorage.getItem('holidayCalendarEvents')
+    if (storedEvents) {
+      setEvents(JSON.parse(storedEvents).map((event: Event) => ({
+        ...event,
+        start: new Date(event.start),
+        end: new Date(event.end)
+      })))
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('holidayCalendarEvents', JSON.stringify(events))
+  }, [events])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-100">
       <header className="bg-white shadow-md">
@@ -116,12 +113,7 @@ export default function HolidayCalendar() {
               Holiday Calendar
             </span>
           </h1>
-          <button
-            onClick={() => toPDF()}
-            className="bg-gradient-to-r from-teal-400 to-cyan-500 text-white rounded-md px-4 py-2 hover:from-teal-500 hover:to-cyan-600 transition duration-300 ease-in-out flex items-center shadow-md"
-          >
-            <Download className="mr-2" /> Export as PDF
-          </button>
+          {/* Export button removed */}
         </div>
       </header>
 
@@ -129,13 +121,13 @@ export default function HolidayCalendar() {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <form onSubmit={handleAddEvent} className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
             <div className="col-span-1 md:col-span-2 lg:col-span-1">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Holiday Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Teacher Name</label>
               <input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter holiday name"
+                placeholder="Enter teacher name"
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 required
               />
@@ -184,16 +176,29 @@ export default function HolidayCalendar() {
             </div>
           </form>
 
-          <div ref={targetRef} className="calendar-container bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="calendar-container bg-white rounded-lg shadow-lg overflow-hidden" style={{ height: 'calc(100vh - 250px)' }}>
             <Calendar
               localizer={localizer}
               events={events}
               startAccessor="start"
               endAccessor="end"
-              style={{ height: 'calc(100vh - 300px)' }}
+              style={{ height: '100%' }}
               date={currentDate}
               onNavigate={handleNavigate}
               views={['month', 'agenda']}
+              formats={{
+                dayFormat: (date, culture, localizer) =>
+                  localizer.format(date, 'D', culture),
+              }}
+              components={{
+                month: {
+                  dateHeader: ({ label }) => (
+                    <span className="rbc-date-cell">
+                      {label}
+                    </span>
+                  ),
+                },
+              }}
             />
           </div>
         </div>
